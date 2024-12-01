@@ -45,10 +45,11 @@ export function tileCoordinatesToLocation(inTileX: number, inTileY: number, cano
  * Given a geographical lnglat, return an unrounded
  * coordinate that represents it at low zoom level.
  * @param lnglat - the location
+ * @param altitude - The altitude in meters of the position.
  * @returns The mercator coordinate
  */
-export function locationToMercatorCoordinate(lnglat: LngLat): MercatorCoordinate {
-    return MercatorCoordinate.fromLngLat(lnglat);
+export function locationToMercatorCoordinate(lnglat: LngLat, altitude: number = 0): MercatorCoordinate {
+    return MercatorCoordinate.fromLngLat(lnglat, altitude);
 }
 
 /**

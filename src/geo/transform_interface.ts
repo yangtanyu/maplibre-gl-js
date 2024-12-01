@@ -284,9 +284,10 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Given a LngLat location, return the screen point that corresponds to it.
      * @param lnglat - location
      * @param terrain - optional terrain
+     * @param altitude - The altitude in meters of the position.
      * @returns screen point
      */
-    locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point;
+    locationToScreenPoint(lnglat: LngLat, terrain?: Terrain, altitude?: number): Point;
 
     /**
      * @internal

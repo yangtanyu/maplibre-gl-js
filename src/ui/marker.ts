@@ -90,6 +90,10 @@ type MarkerOptions = {
       * @defaultValue false
       */
     subpixelPositioning?: boolean;
+    /**
+     * Marker's altitude above ground level,how many meters
+     */
+    altitude?: number;
 };
 
 /**
@@ -150,6 +154,7 @@ export class Marker extends Evented {
     _opacityWhenCovered: string;
     _opacityTimeout: ReturnType<typeof setTimeout>;
     _subpixelPositioning: boolean;
+    _altitude: number;
 
     /**
      * @param options - the options
@@ -168,6 +173,7 @@ export class Marker extends Evented {
         this._rotation = options && options.rotation || 0;
         this._rotationAlignment = options && options.rotationAlignment || 'auto';
         this._pitchAlignment = options && options.pitchAlignment && options.pitchAlignment !== 'auto' ?  options.pitchAlignment : this._rotationAlignment;
+        this._altitude = options && options.altitude || 0;
         this.setOpacity(); // set default opacity
         this.setOpacity(options?.opacity, options?.opacityWhenCovered);
 
@@ -605,10 +611,10 @@ export class Marker extends Evented {
             this._lngLat = this._lngLat?.wrap();
         }
 
-        this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
+        this._flatPos = this._pos = this._map.project(this._lngLat, this._altitude)._add(this._offset);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._map.transform.locationToScreenPoint(this._lngLat)._add(this._offset);
+            this._flatPos = this._map.transform.locationToScreenPoint(this._lngLat, this._map.style && this._map.terrain, this._altitude)._add(this._offset);
         }
 
         let rotation = '';
