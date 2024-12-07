@@ -1536,6 +1536,58 @@ describe('#flyTo', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 0});
     });
 
+    test('no roll when motion is interrupted', () => {
+        const stub = vi.spyOn(browser, 'now');
+
+        const camera = createCamera();
+        stub.mockImplementation(() => 0);
+        camera.easeTo({pitch: 10, bearing: 100, duration: 1000});
+        stub.mockImplementation(() => 100);
+        camera.simulateFrame();
+        camera.easeTo({elevation: 1, duration: 0});
+        expect(camera.getRoll()).toBe(0);
+    });
+
+    test('no roll when motion is interrupted: globe', () => {
+        const stub = vi.spyOn(browser, 'now');
+
+        const camera = createCameraGlobe();
+        stub.mockImplementation(() => 0);
+        camera.easeTo({pitch: 10, bearing: 100, duration: 1000});
+        stub.mockImplementation(() => 100);
+        camera.simulateFrame();
+        camera.easeTo({elevation: 1, duration: 0});
+        expect(camera.getRoll()).toBe(0);
+    });
+
+    test('angles when motion is interrupted', () => {
+        const stub = vi.spyOn(browser, 'now');
+
+        const camera = createCamera();
+        stub.mockImplementation(() => 0);
+        camera.easeTo({pitch: 10, bearing: 20, roll: 30, duration: 1000});
+        stub.mockImplementation(() => 500);
+        camera.simulateFrame();
+        camera.easeTo({elevation: 1, duration: 0});
+        expect(camera.getRoll()).toBeCloseTo(25.041890412598942);
+        expect(camera.getPitch()).toBeCloseTo(8.116189398053095);
+        expect(camera.getBearing()).toBeCloseTo(15.041890412599061);
+    });
+
+    test('angles when motion is interrupted: globe', () => {
+        const stub = vi.spyOn(browser, 'now');
+
+        const camera = createCameraGlobe();
+        stub.mockImplementation(() => 0);
+        camera.easeTo({pitch: 10, bearing: 20, roll: 30, duration: 1000});
+        stub.mockImplementation(() => 500);
+        camera.simulateFrame();
+        camera.easeTo({elevation: 1, duration: 0});
+        expect(camera.getRoll()).toBeCloseTo(25.041890412598942);
+        expect(camera.getPitch()).toBeCloseTo(8.116189398053095);
+        expect(camera.getBearing()).toBeCloseTo(15.041890412599061);
+    });
+
     test('can be called from within a moveend event handler', async () => {
         const camera = createCamera();
         const stub = vi.spyOn(browser, 'now');
@@ -2747,6 +2799,53 @@ describe('#easeTo globe projection', () => {
             camera.easeTo({center: [100, 0], bearing: 90, duration: 0});
             expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
             expect(camera.getBearing()).toBe(90);
+        });
+
+        test('immediately sets padding with duration = 0', () => {
+            const camera = createCameraGlobe();
+            camera.easeTo({center: [100, 0], duration: 0, padding: {left: 100}});
+            expect(camera.getPadding()).toEqual({
+                bottom: 0,
+                left: 100,
+                right: 0,
+                top: 0,
+            });
+
+            expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
+        });
+
+        test('smoothly sets given padding with duration > 0', async () => {
+            const camera = createCameraGlobe();
+            const stub = vi.spyOn(browser, 'now');
+            const promise = camera.once('moveend');
+
+            stub.mockImplementation(() => 0);
+
+            camera.easeTo({center: [100, 0], duration: 100, padding: {left: 100}});
+
+            stub.mockImplementation(() => 50);
+            camera.simulateFrame();
+
+            const padding = camera.getPadding();
+
+            expect(padding.bottom).toBe(0);
+            expect(padding.left).toBeCloseTo(80.2403, 4);
+            expect(padding.right).toBe(0);
+            expect(padding.top).toBe(0);
+
+            stub.mockImplementation(() => 100);
+            camera.simulateFrame();
+
+            await promise;
+
+            expect(camera.getPadding()).toEqual({
+                bottom: 0,
+                left: 100,
+                right: 0,
+                top: 0,
+            });
+
+            expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
         });
 
         test('zooms and rotates', () => {
