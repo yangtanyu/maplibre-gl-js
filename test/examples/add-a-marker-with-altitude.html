@@ -25,48 +25,117 @@
         zoom: 8
     });
 
-    console.log(27777,map.getCenter());
-    console.log(22888,map.getZoom());
+    let lngLatArr = [];
+    const spinningMarkers = [];
+    // type Alignment = 'map' | 'viewport' | 'auto';
+    ['auto', 'map', 'viewport'].forEach((rotationAlignment, i) => {
+        ['auto', 'map', 'viewport'].forEach((pitchAlignment, j) => {
+            const bounds = map.getBounds();
+            const s = bounds.getSouth();
+            const n = bounds.getNorth();
+            const w = bounds.getWest();
+            const e = bounds.getEast();
+            const lng = w + (e - w) * ((i + .5) / 4);
+            const lat = s + (n - s) * ((j + .5) / 3);
+            const height = (i * 2000 + j*2000) * (e - w);
 
-    const getFourPoint = (p,z)=>{
-        console.log(3111,p);
+            const popupHtml = `<div>
+                Pitch Alignment: ${pitchAlignment}<br>
+                Rotation Alignment: ${rotationAlignment}<br>
+                lng:${lng}<br>
+                lat:${lat}<br>
+                height(altitude):${height}<br>
+              </div>`
 
+            const popup = new maplibregl.Popup().setHTML(popupHtml);
 
-        const offsetNum = 0.2;
-        return[
-            [p.lng - offsetNum,p.lat + offsetNum],
-            [p.lng + offsetNum,p.lat + offsetNum],
-            [p.lng,p.lat],
-            [p.lng + offsetNum,p.lat - offsetNum],
-            [p.lng - offsetNum,p.lat - offsetNum],
-        ]
+            const r = Math.round(Math.random() * 255);
+            const g = Math.round(Math.random() * 255);
+            const b = Math.round(Math.random() * 255);
+
+            const sc = Math.random() * 2.5 + 0.5;
+
+            const marker = new maplibregl.Marker({
+                color: `rgb(${r}, ${g}, ${b})`,
+                scale: sc,
+                draggable: true,
+                rotationAlignment,
+                pitchAlignment,
+                altitude:height,
+            })
+                .setLngLat([lng, lat])
+                .setPopup(popup)
+                .addTo(map);
+
+            marker.togglePopup();
+
+            lngLatArr.push({
+                lngLat:[lng, lat],
+                lngOffset:(e - w),
+                latOffset:(n - s),
+                height
+            })
+
+            spinningMarkers.push(marker);
+        });
+    });
+    map.on('style.load',()=>{
+        addFillExtrusionLayer(lngLatArr)
+    });
+    function addFillExtrusionLayer(data=[]){
+        const dataArr = data.map(a=>{
+            let {lngOffset,latOffset} = a;
+            lngOffset = lngOffset/100;
+            latOffset = latOffset/100;
+            const [lng, lat] = a.lngLat;
+            const aObj = {
+                ...a,
+                "type": "Feature",
+                "properties": {
+                    "height": a.height,
+                    "color": `rgba(${a.height%255},${a.height%150},${255 - a.height%255},1)`,
+                },
+                lngLatArr:[
+                    [lng-lngOffset,lat+latOffset],
+                    [lng+lngOffset,lat+latOffset],
+                    [lng+lngOffset,lat-latOffset],
+                    [lng-lngOffset,lat-latOffset],
+                ]
+            }
+
+            aObj.geometry = {
+                "type": "Polygon",
+                "coordinates": [aObj.lngLatArr]
+            }
+
+            return aObj
+        });
+        let layer = {
+            id:'FillExtrusionLayerId',
+            'type': 'fill-extrusion',
+            'source': {
+                type: 'geojson',
+                data: {
+                    "type": "FeatureCollection",
+                    "features":dataArr,
+                }
+            },
+            'paint': {
+                'fill-extrusion-opacity':0.6,
+                'fill-extrusion-color': ["get", "color"],
+                'fill-extrusion-height': ["get", "height"],
+                'fill-extrusion-base': 0,
+            }
+        }
+
+        map.addLayer(layer);
 
     }
 
-    const pArr = getFourPoint(map.getCenter());
-    // todo setHeight
 
-    // pArr.forEach(a=>{
-    //
-    //     const marker = new maplibregl.Marker({altitude:3000})
-    //         .setLngLat(a)
-    //         .addTo(map);
-    //
-    //     console.log(2222,marker);
-    //
-    // })
-
-
-
-
-
-    const marker = new maplibregl.Marker({altitude:300})
+    const marker = new maplibregl.Marker({altitude:5000})
         .setLngLat([12.550343, 55.665957])
         .addTo(map);
-
-
-    console.log(6777,marker)
-
 </script>
 </body>
 </html>

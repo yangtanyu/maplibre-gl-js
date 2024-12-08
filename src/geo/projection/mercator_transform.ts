@@ -318,7 +318,6 @@ export class MercatorTransform implements ITransform {
     }
 
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain, altitude: number = 0): Point {
-        // todo check code the altitude effects for map
         return terrain ?
             this.coordinatePoint(locationToMercatorCoordinate(lnglat, altitude), terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom), this._pixelMatrix3D) :
             this.coordinatePoint(locationToMercatorCoordinate(lnglat, altitude));
@@ -378,7 +377,11 @@ export class MercatorTransform implements ITransform {
      * @returns screen point
      */
     coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix: mat4 = this._pixelMatrix): Point {
-        const p = [coord.x * this.worldSize, coord.y * this.worldSize, (coord.z * this.worldSize) + elevation, 1] as vec4;
+        let altitudeFromCoordZ = 0;
+        if(coord.z >0 && coord.toAltitude){
+            altitudeFromCoordZ = coord.toAltitude();
+        }
+        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation + altitudeFromCoordZ, 1] as vec4;
         vec4.transformMat4(p, p, pixelMatrix);
         return new Point(p[0] / p[3], p[1] / p[3]);
     }
