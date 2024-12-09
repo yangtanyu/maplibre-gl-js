@@ -330,7 +330,7 @@ export class MercatorTransform implements ITransform {
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain, altitude: number = 0): MercatorCoordinate {
         // get point-coordinate from terrain coordinates framebuffer
         if (terrain) {
-            const coordinate = terrain.pointCoordinate(p, altitude);
+            const coordinate = terrain.pointCoordinate(p);
             if (coordinate != null) {
                 return coordinate;
             }

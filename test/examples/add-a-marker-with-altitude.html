@@ -19,6 +19,7 @@
     const map = new maplibregl.Map({
         container: 'map',
         maxPitch:88,
+        hash:true,
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         center: [12.550343, 55.665957],
@@ -76,9 +77,7 @@
             spinningMarkers.push(marker);
         });
     });
-    map.on('style.load',()=>{
-        addFillExtrusionLayer(lngLatArr)
-    });
+
     function addFillExtrusionLayer(data=[]){
         const dataArr = data.map(a=>{
             let {lngOffset,latOffset} = a;
@@ -128,8 +127,9 @@
         map.addLayer(layer);
 
     }
-
-    console.log(map.getCenter())
+    map.on('style.load',()=>{
+        addFillExtrusionLayer(lngLatArr)
+    });
 
     const centerLngLat = map.getCenter();
     const defaultPopup = new maplibregl.Popup().setHTML(

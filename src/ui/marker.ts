@@ -607,7 +607,7 @@ export class Marker extends Evented {
         }
 
         if (this._map.transform.renderWorldCopies) {
-            this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
+            this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform, this._map.style && this._map.terrain, this._altitude);
         } else {
             this._lngLat = this._lngLat?.wrap();
         }

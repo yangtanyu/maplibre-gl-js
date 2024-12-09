@@ -2,6 +2,7 @@ import {LngLat} from '../geo/lng_lat';
 
 import type Point from '@mapbox/point-geometry';
 import type {IReadonlyTransform} from '../geo/transform_interface';
+import {type Terrain} from '../render/terrain';
 
 /**
  * Given a LngLat, prior projected position, and a transform, return a new LngLat shifted
@@ -16,7 +17,7 @@ import type {IReadonlyTransform} from '../geo/transform_interface';
  * map center changes by ±360° due to automatic wrapping, and when about to go off screen,
  * should wrap just enough to avoid doing so.
  */
-export function smartWrap(lngLat: LngLat, priorPos: Point, transform: IReadonlyTransform): LngLat {
+export function smartWrap(lngLat: LngLat, priorPos: Point, transform: IReadonlyTransform, terrain?: Terrain, altitude: number = 0): LngLat {
     const originalLngLat = new LngLat(lngLat.lng, lngLat.lat);
     lngLat = new LngLat(lngLat.lng, lngLat.lat);
 
@@ -26,10 +27,10 @@ export function smartWrap(lngLat: LngLat, priorPos: Point, transform: IReadonlyT
     if (priorPos) {
         const left  = new LngLat(lngLat.lng - 360, lngLat.lat);
         const right = new LngLat(lngLat.lng + 360, lngLat.lat);
-        const delta = transform.locationToScreenPoint(lngLat).distSqr(priorPos);
-        if (transform.locationToScreenPoint(left).distSqr(priorPos) < delta) {
+        const delta = transform.locationToScreenPoint(lngLat, terrain, altitude).distSqr(priorPos);
+        if (transform.locationToScreenPoint(left, terrain, altitude).distSqr(priorPos) < delta) {
             lngLat = left;
-        } else if (transform.locationToScreenPoint(right).distSqr(priorPos) < delta) {
+        } else if (transform.locationToScreenPoint(right, terrain, altitude).distSqr(priorPos) < delta) {
             lngLat = right;
         }
     }
@@ -37,7 +38,7 @@ export function smartWrap(lngLat: LngLat, priorPos: Point, transform: IReadonlyT
     // Second, wrap toward the center until the new position is on screen, or we can't get
     // any closer.
     while (Math.abs(lngLat.lng - transform.center.lng) > 180) {
-        const pos = transform.locationToScreenPoint(lngLat);
+        const pos = transform.locationToScreenPoint(lngLat, terrain, altitude);
         if (pos.x >= 0 && pos.y >= 0 && pos.x <= transform.width && pos.y <= transform.height) {
             break;
         }
@@ -49,7 +50,7 @@ export function smartWrap(lngLat: LngLat, priorPos: Point, transform: IReadonlyT
     }
 
     // Apply the change only if new coord is below horizon
-    if (lngLat.lng !== originalLngLat.lng && transform.isPointOnMapSurface(transform.locationToScreenPoint(lngLat))) {
+    if (lngLat.lng !== originalLngLat.lng && transform.isPointOnMapSurface(transform.locationToScreenPoint(lngLat, terrain, altitude))) {
         return lngLat;
     }
 
