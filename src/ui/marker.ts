@@ -464,6 +464,7 @@ export class Marker extends Evented {
                 } as Offset : this._offset;
             }
             this._popup = popup;
+            popup._altitude = this._altitude;
 
             this._originalTabIndex = this._element.getAttribute('tabindex');
             if (!this._originalTabIndex) {
@@ -718,7 +719,7 @@ export class Marker extends Evented {
         if (!this._isDragging) return;
 
         this._pos = e.point.sub(this._positionDelta);
-        this._lngLat = this._map.unproject(this._pos);
+        this._lngLat = this._map.unproject(this._pos, this._altitude);
         this.setLngLat(this._lngLat);
         // suppress click event so that popups don't toggle on drag
         this._element.style.pointerEvents = 'none';

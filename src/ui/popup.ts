@@ -18,7 +18,8 @@ const defaultOptions = {
     focusAfterOpen: true,
     className: '',
     maxWidth: '240px',
-    subpixelPositioning: false
+    subpixelPositioning: false,
+    altitude: 0
 };
 
 /**
@@ -169,6 +170,7 @@ export class Popup extends Evented {
     _trackPointer: boolean;
     _pos: Point;
     _flatPos: Point;
+    _altitude: number;
 
     /**
      * @param options - the options
@@ -603,10 +605,10 @@ export class Popup extends Evented {
 
         if (this._trackPointer && !cursor) return;
 
-        const pos = this._flatPos = this._pos = this._trackPointer && cursor ? cursor : this._map.project(this._lngLat);
+        const pos = this._flatPos = this._pos = this._trackPointer && cursor ? cursor : this._map.project(this._lngLat, this._altitude);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._trackPointer && cursor ? cursor : this._map.transform.locationToScreenPoint(this._lngLat);
+            this._flatPos = this._trackPointer && cursor ? cursor : this._map.transform.locationToScreenPoint(this._lngLat, this._map.style && this._map.terrain, this._altitude);
         }
 
         let anchor = this.options.anchor;

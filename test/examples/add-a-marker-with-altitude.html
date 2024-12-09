@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Add a default marker</title>
+    <title>Add a altitude marker</title>
     <meta property="og:description" content="Add a default marker to the map." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -53,11 +53,8 @@
             const g = Math.round(Math.random() * 255);
             const b = Math.round(Math.random() * 255);
 
-            const sc = Math.random() * 2.5 + 0.5;
-
             const marker = new maplibregl.Marker({
                 color: `rgb(${r}, ${g}, ${b})`,
-                scale: sc,
                 draggable: true,
                 rotationAlignment,
                 pitchAlignment,
@@ -132,9 +129,20 @@
 
     }
 
+    console.log(map.getCenter())
 
-    const marker = new maplibregl.Marker({altitude:5000})
-        .setLngLat([12.550343, 55.665957])
+    const centerLngLat = map.getCenter();
+    const defaultPopup = new maplibregl.Popup().setHTML(
+        `<div>
+                lng:${centerLngLat.lng}<br>
+                lat:${centerLngLat.lat}<br>
+              </div>`
+    );
+    const marker = new maplibregl.Marker({
+        draggable: true,
+    })
+        .setLngLat([centerLngLat.lng, centerLngLat.lat])
+        .setPopup(defaultPopup)
         .addTo(map);
 </script>
 </body>

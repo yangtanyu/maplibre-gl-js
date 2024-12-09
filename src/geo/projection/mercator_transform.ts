@@ -323,19 +323,19 @@ export class MercatorTransform implements ITransform {
             this.coordinatePoint(locationToMercatorCoordinate(lnglat, altitude));
     }
 
-    screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
-        return mercatorCoordinateToLocation(this.screenPointToMercatorCoordinate(p, terrain));
+    screenPointToLocation(p: Point, terrain?: Terrain, altitude: number = 0): LngLat {
+        return mercatorCoordinateToLocation(this.screenPointToMercatorCoordinate(p, terrain, altitude));
     }
 
-    screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
+    screenPointToMercatorCoordinate(p: Point, terrain?: Terrain, altitude: number = 0): MercatorCoordinate {
         // get point-coordinate from terrain coordinates framebuffer
         if (terrain) {
-            const coordinate = terrain.pointCoordinate(p);
+            const coordinate = terrain.pointCoordinate(p, altitude);
             if (coordinate != null) {
                 return coordinate;
             }
         }
-        return this.screenPointToMercatorCoordinateAtZ(p);
+        return this.screenPointToMercatorCoordinateAtZ(p, altitude);
     }
 
     screenPointToMercatorCoordinateAtZ(p: Point, mercatorZ?: number): MercatorCoordinate {

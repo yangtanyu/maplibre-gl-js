@@ -1222,6 +1222,7 @@ export class Map extends Camera {
      * to the specified pixel coordinates.
      *
      * @param point - The pixel coordinates to unproject.
+     * @param altitude - The altitude in meters of the position.
      * @returns The {@link LngLat} corresponding to `point`.
      * @example
      * ```ts
@@ -1231,8 +1232,8 @@ export class Map extends Camera {
      * });
      * ```
      */
-    unproject(point: PointLike): LngLat {
-        return this.transform.screenPointToLocation(Point.convert(point), this.terrain);
+    unproject(point: PointLike, altitude: number = 0): LngLat {
+        return this.transform.screenPointToLocation(Point.convert(point), this.terrain, altitude);
     }
 
     /**
