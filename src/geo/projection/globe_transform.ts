@@ -946,13 +946,16 @@ export class GlobeTransform implements ITransform {
         this.setZoom(this.zoom + getZoomAdjustment(oldLat, this.center.lat));
     }
 
-    locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
+    locationToScreenPoint(lnglat: LngLat, terrain?: Terrain, altitude: number = 0): Point {
         if (!this.isGlobeRendering) {
-            return this._mercatorTransform.locationToScreenPoint(lnglat, terrain);
+            return this._mercatorTransform.locationToScreenPoint(lnglat, terrain, altitude);
         }
 
         const pos = angularCoordinatesToSurfaceVector(lnglat);
 
+        if(altitude>0){
+            vec3.scale(pos, pos, 1.0 + altitude / earthRadius);
+        }
         if (terrain) {
             const elevation = terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom);
             vec3.scale(pos, pos, 1.0 + elevation / earthRadius);
