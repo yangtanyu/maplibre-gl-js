@@ -218,14 +218,14 @@ export class VerticalPerspectiveTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
-    public get nearZ(): number { 
-        return this._helper.nearZ; 
+    public get nearZ(): number {
+        return this._helper.nearZ;
     }
-    public get farZ(): number { 
-        return this._helper.farZ; 
+    public get farZ(): number {
+        return this._helper.farZ;
     }
-    public get autoCalculateNearFarZ(): boolean { 
-        return this._helper.autoCalculateNearFarZ; 
+    public get autoCalculateNearFarZ(): boolean {
+        return this._helper.autoCalculateNearFarZ;
     }
     setTransitionState(_value: number): void {
         // Do nothing
@@ -756,9 +756,12 @@ export class VerticalPerspectiveTransform implements ITransform {
         this.setZoom(this.zoom + getZoomAdjustment(oldLat, this.center.lat));
     }
 
-    locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
+    locationToScreenPoint(lnglat: LngLat, terrain?: Terrain, altitude: number = 0): Point {
         const pos = angularCoordinatesToSurfaceVector(lnglat);
 
+        if(altitude>0){
+            vec3.scale(pos, pos, 1.0 + altitude / earthRadius);
+        }
         if (terrain) {
             const elevation = terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom);
             vec3.scale(pos, pos, 1.0 + elevation / earthRadius);
@@ -782,7 +785,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         );
     }
 
-    screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
+    screenPointToMercatorCoordinate(p: Point, terrain?: Terrain, altitude: number = 0): MercatorCoordinate {
         if (terrain) {
             // Mercator has terrain handling implemented properly and since terrain
             // simply draws tile coordinates into a special framebuffer, this works well even for globe.
@@ -791,11 +794,11 @@ export class VerticalPerspectiveTransform implements ITransform {
                 return coordinate;
             }
         }
-        return MercatorCoordinate.fromLngLat(this.unprojectScreenPoint(p));
+        return MercatorCoordinate.fromLngLat(this.unprojectScreenPoint(p), altitude);
     }
 
-    screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
-        return this.screenPointToMercatorCoordinate(p, terrain)?.toLngLat();
+    screenPointToLocation(p: Point, terrain?: Terrain, altitude: number = 0): LngLat {
+        return this.screenPointToMercatorCoordinate(p, terrain, altitude)?.toLngLat();
     }
 
     isPointOnMapSurface(p: Point, _terrain?: Terrain): boolean {

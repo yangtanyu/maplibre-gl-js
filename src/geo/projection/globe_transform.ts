@@ -202,14 +202,14 @@ export class GlobeTransform implements ITransform {
     get cameraToCenterDistance(): number {
         return this._helper.cameraToCenterDistance;
     }
-    public get nearZ(): number { 
-        return this._helper.nearZ; 
+    public get nearZ(): number {
+        return this._helper.nearZ;
     }
-    public get farZ(): number { 
-        return this._helper.farZ; 
+    public get farZ(): number {
+        return this._helper.farZ;
     }
-    public get autoCalculateNearFarZ(): boolean { 
-        return this._helper.autoCalculateNearFarZ; 
+    public get autoCalculateNearFarZ(): boolean {
+        return this._helper.autoCalculateNearFarZ;
     }
     //
     // Implementation of globe transform
@@ -415,16 +415,16 @@ export class GlobeTransform implements ITransform {
         return;
     }
 
-    locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
-        return this.currentTransform.locationToScreenPoint(lnglat, terrain);
+    locationToScreenPoint(lnglat: LngLat, terrain?: Terrain, altitude: number = 0): Point {
+        return this.currentTransform.locationToScreenPoint(lnglat, terrain, altitude);
     }
 
-    screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
-        return this.currentTransform.screenPointToMercatorCoordinate(p, terrain);
+    screenPointToMercatorCoordinate(p: Point, terrain?: Terrain, altitude: number = 0): MercatorCoordinate {
+        return this.currentTransform.screenPointToMercatorCoordinate(p, terrain, altitude);
     }
 
-    screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
-        return this.currentTransform.screenPointToLocation(p, terrain);
+    screenPointToLocation(p: Point, terrain?: Terrain, altitude: number = 0): LngLat {
+        return this.currentTransform.screenPointToLocation(p, terrain, altitude);
     }
 
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
