@@ -314,9 +314,10 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Given a point on screen, return its mercator coordinate.
      * @param p - the point
      * @param terrain - optional terrain
+     * @param altitude - The altitude in meters of the position.
      * @returns lnglat
      */
-    screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate;
+    screenPointToMercatorCoordinate(p: Point, terrain?: Terrain, altitude?: number): MercatorCoordinate;
 
     /**
      * @internal

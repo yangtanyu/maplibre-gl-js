@@ -198,17 +198,17 @@ export class MercatorTransform implements ITransform {
     get renderWorldCopies(): boolean {
         return this._helper.renderWorldCopies;
     }
-    get cameraToCenterDistance(): number { 
+    get cameraToCenterDistance(): number {
         return this._helper.cameraToCenterDistance;
     }
-    public get nearZ(): number { 
-        return this._helper.nearZ; 
+    public get nearZ(): number {
+        return this._helper.nearZ;
     }
-    public get farZ(): number { 
-        return this._helper.farZ; 
+    public get farZ(): number {
+        return this._helper.farZ;
     }
-    public get autoCalculateNearFarZ(): boolean { 
-        return this._helper.autoCalculateNearFarZ; 
+    public get autoCalculateNearFarZ(): boolean {
+        return this._helper.autoCalculateNearFarZ;
     }
     setTransitionState(_value: number, _error: number): void {
         // Do nothing
@@ -314,17 +314,17 @@ export class MercatorTransform implements ITransform {
         }
     }
 
-    locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
+    locationToScreenPoint(lnglat: LngLat, terrain?: Terrain, altitude: number = 0): Point {
         return terrain ?
-            this.coordinatePoint(MercatorCoordinate.fromLngLat(lnglat), terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom), this._pixelMatrix3D) :
-            this.coordinatePoint(MercatorCoordinate.fromLngLat(lnglat));
+            this.coordinatePoint(MercatorCoordinate.fromLngLat(lnglat, altitude), terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom), this._pixelMatrix3D) :
+            this.coordinatePoint(MercatorCoordinate.fromLngLat(lnglat, altitude));
     }
 
-    screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
-        return this.screenPointToMercatorCoordinate(p, terrain)?.toLngLat();
+    screenPointToLocation(p: Point, terrain?: Terrain, altitude: number = 0): LngLat {
+        return this.screenPointToMercatorCoordinate(p, terrain, altitude)?.toLngLat();
     }
 
-    screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
+    screenPointToMercatorCoordinate(p: Point, terrain?: Terrain, altitude: number = 0): MercatorCoordinate {
         // get point-coordinate from terrain coordinates framebuffer
         if (terrain) {
             const coordinate = terrain.pointCoordinate(p);
@@ -332,7 +332,7 @@ export class MercatorTransform implements ITransform {
                 return coordinate;
             }
         }
-        return this.screenPointToMercatorCoordinateAtZ(p);
+        return this.screenPointToMercatorCoordinateAtZ(p, altitude);
     }
 
     screenPointToMercatorCoordinateAtZ(p: Point, mercatorZ?: number): MercatorCoordinate {
@@ -374,7 +374,11 @@ export class MercatorTransform implements ITransform {
      * @returns screen point
      */
     coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix: mat4 = this._pixelMatrix): Point {
-        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
+        let altitudeFromCoordZ = 0;
+        if(coord.z >0 && coord.toAltitude){
+            altitudeFromCoordZ = coord.toAltitude();
+        }
+        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation + altitudeFromCoordZ, 1] as vec4;
         vec4.transformMat4(p, p, pixelMatrix);
         return new Point(p[0] / p[3], p[1] / p[3]);
     }
@@ -719,7 +723,7 @@ export class MercatorTransform implements ITransform {
         const {overscaledTileID, aligned, applyTerrainMatrix} = params;
         const mercatorTileCoordinates = this._helper.getMercatorTileCoordinates(overscaledTileID);
         const tilePosMatrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID, aligned, true) : null;
-        
+
         let mainMatrix: mat4;
         if (overscaledTileID && overscaledTileID.terrainRttPosMatrix32f && applyTerrainMatrix) {
             mainMatrix = overscaledTileID.terrainRttPosMatrix32f;
