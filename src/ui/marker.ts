@@ -90,10 +90,6 @@ type MarkerOptions = {
       * @defaultValue false
       */
     subpixelPositioning?: boolean;
-    /**
-     * Marker's altitude above ground level,how many meters
-     */
-    altitude?: number;
 };
 
 /**
@@ -154,7 +150,6 @@ export class Marker extends Evented {
     _opacityWhenCovered: string;
     _opacityTimeout: ReturnType<typeof setTimeout>;
     _subpixelPositioning: boolean;
-    _altitude: number;
 
     /**
      * @param options - the options
@@ -173,8 +168,6 @@ export class Marker extends Evented {
         this._rotation = options && options.rotation || 0;
         this._rotationAlignment = options && options.rotationAlignment || 'auto';
         this._pitchAlignment = options && options.pitchAlignment && options.pitchAlignment !== 'auto' ?  options.pitchAlignment : this._rotationAlignment;
-        this._altitude = options && options.altitude || 0;
-        this.setOpacity(); // set default opacity
         this.setOpacity(options?.opacity, options?.opacityWhenCovered);
 
         if (!options || !options.element) {
@@ -464,7 +457,6 @@ export class Marker extends Evented {
                 } as Offset : this._offset;
             }
             this._popup = popup;
-            popup._altitude = this._altitude;
 
             this._originalTabIndex = this._element.getAttribute('tabindex');
             if (!this._originalTabIndex) {
@@ -607,15 +599,15 @@ export class Marker extends Evented {
         }
 
         if (this._map.transform.renderWorldCopies) {
-            this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform, this._map.style && this._map.terrain, this._altitude);
+            this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
         } else {
             this._lngLat = this._lngLat?.wrap();
         }
 
-        this._flatPos = this._pos = this._map.project(this._lngLat, this._altitude)._add(this._offset);
+        this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._map.transform.locationToScreenPoint(this._lngLat, this._map.style && this._map.terrain, this._altitude)._add(this._offset);
+            this._flatPos = this._map.transform.locationToScreenPoint(this._lngLat)._add(this._offset);
         }
 
         let rotation = '';
@@ -719,7 +711,7 @@ export class Marker extends Evented {
         if (!this._isDragging) return;
 
         this._pos = e.point.sub(this._positionDelta);
-        this._lngLat = this._map.unproject(this._pos, this._altitude);
+        this._lngLat = this._map.unproject(this._pos);
         this.setLngLat(this._lngLat);
         // suppress click event so that popups don't toggle on drag
         this._element.style.pointerEvents = 'none';
@@ -864,16 +856,19 @@ export class Marker extends Evented {
      * @param opacityWhenCovered - Sets the `opacityWhenCovered` property of the marker.
      */
     setOpacity(opacity?: string, opacityWhenCovered?: string): this {
-        if (opacity === undefined && opacityWhenCovered === undefined) {
+        // Reset opacity when called without params or from constructor
+        if (this._opacity === undefined || (opacity === undefined && opacityWhenCovered === undefined)) {
             this._opacity = '1';
             this._opacityWhenCovered = '0.2';
         }
+
         if (opacity !== undefined) {
             this._opacity = opacity;
         }
         if (opacityWhenCovered !== undefined) {
             this._opacityWhenCovered = opacityWhenCovered;
         }
+
         if (this._map) {
             this._updateOpacity(true);
         }
