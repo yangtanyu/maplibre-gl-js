@@ -90,10 +90,6 @@ type MarkerOptions = {
       * @defaultValue false
       */
     subpixelPositioning?: boolean;
-    /**
-     * Marker's altitude above ground level,how many meters
-     */
-    altitude?: number;
 };
 
 /**
@@ -154,7 +150,6 @@ export class Marker extends Evented {
     _opacityWhenCovered: string;
     _opacityTimeout: ReturnType<typeof setTimeout>;
     _subpixelPositioning: boolean;
-    _altitude: number;
 
     /**
      * @param options - the options
@@ -173,7 +168,6 @@ export class Marker extends Evented {
         this._rotation = options && options.rotation || 0;
         this._rotationAlignment = options && options.rotationAlignment || 'auto';
         this._pitchAlignment = options && options.pitchAlignment && options.pitchAlignment !== 'auto' ?  options.pitchAlignment : this._rotationAlignment;
-        this._altitude = options && options.altitude || 0;
         this.setOpacity(options?.opacity, options?.opacityWhenCovered);
 
         if (!options || !options.element) {
@@ -466,7 +460,6 @@ export class Marker extends Evented {
                 } as Offset : this._offset;
             }
             this._popup = popup;
-            popup._altitude = this._altitude;
 
             this._originalTabIndex = this._element.getAttribute('tabindex');
             if (!this._originalTabIndex) {
@@ -560,8 +553,8 @@ export class Marker extends Evented {
 
     _updateOpacity(force: boolean = false) {
         const terrain = this._map?.terrain;
-        if (!terrain) {
-            const occluded = this._map.transform.isLocationOccluded(this._lngLat);
+        const occluded = this._map.transform.isLocationOccluded(this._lngLat);
+        if (!terrain || occluded) {
             const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
             if (this._element.style.opacity !== targetOpacity) { this._element.style.opacity = targetOpacity; }
             return;
@@ -582,7 +575,6 @@ export class Marker extends Evented {
         // Transform marker position to clip space
         const elevation = map.terrain.getElevationForLngLatZoom(this._lngLat, map.transform.tileZoom);
         const markerDistance = map.transform.lngLatToCameraDepth(this._lngLat, elevation);
-
         const forgiveness = .006;
         if (markerDistance - terrainDistance < forgiveness) {
             this._element.style.opacity = this._opacity;
@@ -608,16 +600,12 @@ export class Marker extends Evented {
             this._map.once('render', this._update);
         }
 
-        if (this._map.transform.renderWorldCopies) {
-            this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform, this._map.style && this._map.terrain, this._altitude);
-        } else {
-            this._lngLat = this._lngLat?.wrap();
-        }
+        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
 
-        this._flatPos = this._pos = this._map.project(this._lngLat, this._altitude)._add(this._offset);
+        this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._map.transform.locationToScreenPoint(this._lngLat, this._map.style && this._map.terrain, this._altitude)._add(this._offset);
+            this._flatPos = this._map.transform.locationToScreenPoint(this._lngLat)._add(this._offset);
         }
 
         let rotation = '';
@@ -721,7 +709,7 @@ export class Marker extends Evented {
         if (!this._isDragging) return;
 
         this._pos = e.point.sub(this._positionDelta);
-        this._lngLat = this._map.unproject(this._pos, this._altitude);
+        this._lngLat = this._map.unproject(this._pos);
         this.setLngLat(this._lngLat);
         // suppress click event so that popups don't toggle on drag
         this._element.style.pointerEvents = 'none';
